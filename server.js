@@ -41,7 +41,12 @@ function handleMqttSub(socket) {
 
     // redirect from MQTT to SOCKET
     mqttClient.on('message', function (topic, message) {
-        console.log('Send to SOCKET: topic = ' + topic + ' with payload = ' + JSON.stringify(message));
-        socket.emit(topic, message);
+
+        //Convert from Buffer to Object
+        var decodedString = String.fromCharCode.apply(null, new Uint8Array(message));
+        var payload = JSON.parse(decodedString);
+
+        console.log('Send to SOCKET: topic = ' + topic + ' with payload = ' + JSON.stringify(payload));
+        socket.emit(topic, payload);
     })
 }
