@@ -9,25 +9,37 @@ http.listen(4201, function () {
 
 io.on('connection', function (socket) {
     console.log('a user connected');
+
+    var mqttClient = null;
     socket.on('connect-to-mqtt', function (data) {
-        connectToMqtt(data, socket);
+        mqttClient = connectToMqtt(data, socket);
+
+        // notify client about mqtt connection
+        mqttClient.on('connect', function () {
+            socket.emit('mqtt-connection/' + data.username);
+            handleMqttSub(mqttClient, socket);
+        });
+
+
     });
+
+    // Handle disconnect SCOKET user
+    socket.on('disconnect', function() {
+        console.log('Disconnect SOCKET user');
+        if (mqttClient != null) {
+            console.log('Disconnect MQTT user');
+            mqttClient.end();
+        }
+    });
+
 });
 
-var mqttClient;
-
-function connectToMqtt(data, socket) {
-    console.log('Connection data: ' + JSON.stringify(data));
-    mqttClient = mqtt.connect('mqtt://localhost:7707', {username: data.username, password: data.password});
-
-    // notify client about mqtt connection
-    mqttClient.on('connect', function () {
-        socket.emit('mqtt-connection/' + data.username);
-        handleMqttSub(socket);
-    });
+function connectToMqtt(data) {
+    console.log('Connection to MQTT with data: ' + JSON.stringify(data));
+    return mqtt.connect('mqtt://localhost:7707', {username: data.username, password: data.password});
 }
 
-function handleMqttSub(socket) {
+function handleMqttSub(mqttClient, socket) {
 
     // redirect from SOCKET to MQTT
     socket.on('mqtt-sub', function (data) {
