@@ -8,7 +8,7 @@ http.listen(4201, function () {
 });
 
 io.on('connection', function (socket) {
-    console.log('a user connected');
+    console.log('User connected to SOCKET');
 
     var mqttClient = null;
     socket.on('connect-to-mqtt', function (data) {
@@ -16,6 +16,7 @@ io.on('connection', function (socket) {
 
         // notify client about mqtt connection
         mqttClient.on('connect', function () {
+            console.log('User connected to MQTT');
             socket.emit('mqtt-connection/' + data.username);
             handleMqttSub(mqttClient, socket);
         });
