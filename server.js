@@ -21,11 +21,10 @@ io.on('connection', function (socket) {
             handleMqttSub(mqttClient, socket);
         });
 
-
     });
 
-    // Handle disconnect SCOKET user
-    socket.on('disconnect', function() {
+    // Handle disconnect SOCKET user
+    socket.on('disconnect', function () {
         console.log('Disconnect SOCKET user');
         if (mqttClient != null) {
             console.log('Disconnect MQTT user');
@@ -42,17 +41,23 @@ function connectToMqtt(data) {
 
 function handleMqttSub(mqttClient, socket) {
 
-    // redirect from SOCKET to MQTT
+    // request to sub
     socket.on('mqtt-sub', function (data) {
-        console.log(data);
         var topic = data.topic;
         var payload = data.payload;
-        console.log('Send to MQTT: topic = ' + topic + ' with payload = ' + JSON.stringify(payload));
+        console.log('SUB to MQTT: topic = ' + topic + ' with payload = ' + JSON.stringify(payload));
         mqttClient.subscribe(topic);
-        // mqttClient.publish(topic, JSON.stringify(payload));
     });
 
-    // redirect from MQTT to SOCKET
+    // redirect MESSAGE from SOCKET to MQTT
+    socket.on('mqtt-pub', function (data) {
+        var topic = data.topic;
+        var payload = data.payload;
+        console.log('MQTT pub to topic = ' + topic + ' with payload = ' + JSON.stringify(payload));
+        mqttClient.publish(topic, JSON.stringify(payload));
+    });
+
+    // redirect MESSAGE from MQTT to SOCKET
     mqttClient.on('message', function (topic, message) {
 
         //Convert from Buffer to Object
